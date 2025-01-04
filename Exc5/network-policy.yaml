@@ -1,0 +1,94 @@
+### Deny all ingress traffic by default ###
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: network-policy-ns
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+### back-end-api to front-end ingress policy ###
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: back-end-api-network-policy
+  namespace: network-policy-ns
+spec:
+  podSelector:
+    matchLabels:
+      role: back-end-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: front-end
+          namespaceSelector:
+            matchLabels:
+              name: network-policy-ns
+---
+### front-end from back-end-api egress policy ###
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: front-end-network-policy
+  namespace: network-policy-ns
+spec:
+  podSelector:
+    matchLabels:
+      role: front-end
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              role: back-end-api
+          namespaceSelector:
+            matchLabels:
+              name: network-policy-ns
+---
+### admin-back-end-api to admin-front-end ingress policy ###
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: admin-back-end-api-network-policy
+  namespace: network-policy-ns
+spec:
+  podSelector:
+    matchLabels:
+      role: admin-back-end-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: admin-front-end
+          namespaceSelector:
+            matchLabels:
+              name: network-policy-ns
+---
+### admin-front-end from admin-back-end-api egress policy ###
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: admin-front-end-network-policy
+  namespace: network-policy-ns
+spec:
+  podSelector:
+    matchLabels:
+      role: admin-front-end
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              role: admin-back-end-api
+          namespaceSelector:
+            matchLabels:
+              name: network-policy-ns
